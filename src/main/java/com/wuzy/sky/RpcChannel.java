@@ -44,8 +44,8 @@ public class RpcChannel {
         return rpcChannel;
     }
 
-    public Object send(Request request){
-        MessageCallback rpcFuture = new MessageCallback(request);
+    public Object send(Request request,int waitTimeout){
+        MessageCallback rpcFuture = new MessageCallback(request,waitTimeout);
         ClientChannelHandler.futureMap.put(request.getRequestId(), rpcFuture);
         channel.writeAndFlush(request);
         Object obj = null;

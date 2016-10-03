@@ -18,23 +18,25 @@ public class MessageCallback {
 
     private Request request;
     private Response response;
+    private int waitTimeout;
 
     private Lock lock = new ReentrantLock();
     private Condition finish = lock.newCondition();
 
     private Map<ConfigOption,Object> options = ClientContext.create().getOptions();
 
-    public MessageCallback(Request request){
+    public MessageCallback(Request request,int waitTimeout){
         this.request = request;
+        this.waitTimeout = waitTimeout;
     }
 
     public Object start() throws InterruptedException {
         try {
             lock.lock();
             //设定一下超时时间，rpc服务器太久没有相应的话，就默认返回空吧。
-            Object waitTimeOut = options.get(ConfigOption.WAIT_TIMEOUT);
-            if (waitTimeOut!=null) {
-                finish.await(Long.parseLong(waitTimeOut.toString()),TimeUnit.MILLISECONDS);
+            if (waitTimeout>0) {
+                System.out.println("waitTimeout===="+waitTimeout);
+                finish.await(Long.valueOf(waitTimeout),TimeUnit.MILLISECONDS);
             }
             if (this.response != null) {
                 return this.response.getResult();

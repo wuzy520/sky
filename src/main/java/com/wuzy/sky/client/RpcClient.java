@@ -18,27 +18,27 @@ public class RpcClient {
     private Bootstrap bootstrap;
     private volatile Channel channel; // volatile, please copy reference to use
     private volatile boolean closed;
+    private int connectTimeOut;
 
     private String host;
     private Integer port;
 
-    private RpcClient(){
+    private RpcClient() {
 
     }
 
-    public void setServer(String host,Integer port){
-        this.host=host;
-        this.port=port;
+    public void setServer(String host, Integer port) {
+        this.host = host;
+        this.port = port;
     }
 
-    private static final class RpcClientHolder{
+    private static final class RpcClientHolder {
         private static final RpcClient client = new RpcClient();
     }
 
-    public static RpcClient getInstance(){
+    public static RpcClient getInstance() {
         return RpcClientHolder.client;
     }
-
 
 
     public void doOpen() {
@@ -48,31 +48,33 @@ public class RpcClient {
         bootstrap.group(group)
                 .channel(NioSocketChannel.class)
                 .option(ChannelOption.SO_KEEPALIVE, true)
-                .option(ChannelOption.TCP_NODELAY, true)
-                .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 5000)
-                .handler(new ChannelInitializer<SocketChannel>() {
-                    @Override
-                    protected void initChannel(SocketChannel socketChannel) throws Exception {
-                        socketChannel.pipeline()
-                                .addLast("encoder", new KryoMsgEncoder())
-                                .addLast("decoder", new KryoMsgDecoder())
-                                .addLast("handler", handler);
-                    }
-                });
+                .option(ChannelOption.TCP_NODELAY, true);
+        if (connectTimeOut > 0) {
+            bootstrap.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, connectTimeOut);
+        }
+        bootstrap.handler(new ChannelInitializer<SocketChannel>() {
+            @Override
+            protected void initChannel(SocketChannel socketChannel) throws Exception {
+                socketChannel.pipeline()
+                        .addLast("encoder", new KryoMsgEncoder())
+                        .addLast("decoder", new KryoMsgDecoder())
+                        .addLast("handler", handler);
+            }
+        });
     }
 
     public void doConnect() throws Throwable {
-        System.out.println("host, port==="+host+","+port);
+        System.out.println("host, port===" + host + "," + port);
         ChannelFuture future = bootstrap.connect(host, port).sync();
         try {
             boolean ret = future.awaitUninterruptibly(5000, TimeUnit.MILLISECONDS);
-            System.out.println("ret==="+ret);
+            System.out.println("ret===" + ret);
             if (ret && future.isSuccess()) {
                 Channel newChannel = future.channel();
                 try {
                     // 关闭旧的连接
                     Channel oldChannel = RpcClient.this.channel;
-                    System.out.println("oldChannel=="+oldChannel);
+                    System.out.println("oldChannel==" + oldChannel);
                     if (oldChannel != null) {
                         oldChannel.close();
                         System.out.println("oldChannle close...");
@@ -89,25 +91,25 @@ public class RpcClient {
                         }
                     } else {
                         RpcClient.this.channel = newChannel;
-                        System.out.println(" RpcClient.this.channel====="+ RpcClient.this.channel);
+                        System.out.println(" RpcClient.this.channel=====" + RpcClient.this.channel);
                     }
                 }
             } else if (future.cause() != null) {
                 throw future.cause();
             }
-        }finally {
-            if (! isConnected()) {
+        } finally {
+            if (!isConnected()) {
                 System.out.println("cancel.....");
                 future.cancel(true);
             }
 
-           // close();
+            // close();
         }
     }
 
 
-    public void close(){
-        this.closed=true;
+    public void close() {
+        this.closed = true;
     }
 
 
@@ -122,12 +124,20 @@ public class RpcClient {
         return channel.isConnected();
     }
 
-    public RpcChannel  getChannel(){
+    public RpcChannel getChannel() {
         Channel c = channel;
-        if (c==null || !c.isOpen()){
+        if (c == null || !c.isOpen()) {
             return null;
         }
         return RpcChannel.getOrAddChannel(c);
     }
 
+
+    public int getConnectTimeOut() {
+        return connectTimeOut;
+    }
+
+    public void setConnectTimeOut(int connectTimeOut) {
+        this.connectTimeOut = connectTimeOut;
+    }
 }

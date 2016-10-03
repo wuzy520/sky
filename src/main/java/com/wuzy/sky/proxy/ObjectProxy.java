@@ -16,12 +16,19 @@ import java.util.UUID;
  */
 public class ObjectProxy<T> implements InvocationHandler {
     private Class<T> clazz;
+    private int waitTimeout;
 
     private Map<ConfigOption, Object> options = ClientContext.create().getOptions();
 
     public ObjectProxy(Class<T> clazz) {
         this.clazz = clazz;
     }
+
+    public ObjectProxy(Class<T> clazz,int waitTimeout) {
+        this.clazz = clazz;
+        this.waitTimeout = waitTimeout;
+    }
+
 
     @Override
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
@@ -50,7 +57,17 @@ public class ObjectProxy<T> implements InvocationHandler {
 
         //发送给服务端,并返回数据
         RpcChannel channel = RpcClient.getInstance().getChannel();
-        Object result = channel.send(request);
+        int timeout = 0;
+        Integer optionTimeOut =  (Integer)options.get(ConfigOption.WAIT_TIMEOUT);
+        if (optionTimeOut!=null){
+            timeout = optionTimeOut;
+        }
+
+        if (waitTimeout>0){
+            timeout = waitTimeout;
+        }
+
+        Object result = channel.send(request,timeout);
 
         return result;
     }

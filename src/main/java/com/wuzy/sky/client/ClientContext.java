@@ -22,7 +22,10 @@ public class ClientContext {
     public ClientContext start(){
         RpcClient rpcClient = RpcClient.getInstance();
         rpcClient.setServer((String) options.get(ConfigOption.SERVER),(Integer) options.get(ConfigOption.PORT));
-
+        Object connectTimeout =  options.get(ConfigOption.CONNECT_TIMEOUT_MILLIS);
+        if (connectTimeout!=null) {
+            rpcClient.setConnectTimeOut((Integer) connectTimeout);
+        }
         try {
             lock.lock();
             rpcClient.doOpen();
@@ -58,6 +61,14 @@ public class ClientContext {
                 new Class<?>[]{interfaceClass},
                 new ObjectProxy<T>(interfaceClass));
     }
+
+    public  <T> T get(Class<T> interfaceClass,int waitTimeout) {
+        return (T) Proxy.newProxyInstance(
+                interfaceClass.getClassLoader(),
+                new Class<?>[]{interfaceClass},
+                new ObjectProxy<T>(interfaceClass,waitTimeout));
+    }
+
 
 
     public final Map<ConfigOption,Object> getOptions(){

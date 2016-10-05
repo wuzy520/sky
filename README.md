@@ -6,7 +6,7 @@
 服务端注册服务代码如下：
         //配置相关信息，如端口号等
         
-        //服务具体的实现类,可以结合guice和Spring进行整合
+        //服务具体的实现类,可以结合guice或者Spring进行整合
         IServiceInitializer initializer = new IServiceInitializer() {
             @Override
             public void init() {

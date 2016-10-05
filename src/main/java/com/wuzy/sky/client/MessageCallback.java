@@ -23,8 +23,6 @@ public class MessageCallback {
     private Lock lock = new ReentrantLock();
     private Condition finish = lock.newCondition();
 
-    private Map<ConfigOption,Object> options = ClientContext.create().getOptions();
-
     public MessageCallback(Request request,int waitTimeout){
         this.request = request;
         this.waitTimeout = waitTimeout;

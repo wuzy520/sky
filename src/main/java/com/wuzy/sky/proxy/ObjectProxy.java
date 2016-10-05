@@ -18,15 +18,17 @@ public class ObjectProxy<T> implements InvocationHandler {
     private Class<T> clazz;
     private int waitTimeout;
 
-    private Map<ConfigOption, Object> options = ClientContext.create().getOptions();
+    private Map<ConfigOption, Object> options;
 
-    public ObjectProxy(Class<T> clazz) {
+    public ObjectProxy(Class<T> clazz,Map<ConfigOption, Object> options) {
         this.clazz = clazz;
+        this.options = options;
     }
 
-    public ObjectProxy(Class<T> clazz,int waitTimeout) {
+    public ObjectProxy(Class<T> clazz,int waitTimeout,Map<ConfigOption, Object> options) {
         this.clazz = clazz;
         this.waitTimeout = waitTimeout;
+        this.options = options;
     }
 
 
@@ -54,9 +56,9 @@ public class ObjectProxy<T> implements InvocationHandler {
         request.setMethodName(method.getName());
         request.setParameterTypes(method.getParameterTypes());
         request.setParameters(args);
-
+        System.out.println("className====="+request.getClassName());
         //发送给服务端,并返回数据
-        RpcChannel channel = RpcClient.getInstance().getChannel();
+        RpcChannel channel = ClientContext.channelMap.get(request.getClassName());
         int timeout = 0;
         Integer optionTimeOut =  (Integer)options.get(ConfigOption.WAIT_TIMEOUT);
         if (optionTimeOut!=null){

@@ -23,21 +23,13 @@ public class RpcClient {
     private String host;
     private Integer port;
 
-    private RpcClient() {
+    public RpcClient() {
 
     }
 
-    public void setServer(String host, Integer port) {
+    public  RpcClient(String host, Integer port) {
         this.host = host;
         this.port = port;
-    }
-
-    private static final class RpcClientHolder {
-        private static final RpcClient client = new RpcClient();
-    }
-
-    public static RpcClient getInstance() {
-        return RpcClientHolder.client;
     }
 
 

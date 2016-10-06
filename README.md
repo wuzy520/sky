@@ -43,7 +43,7 @@
                     .registry("localhost:2181")//zookeeper 注册中心
                     .addService(UserDao.class);//添加要使用的服务接口
                
-                  //启动服务,启动服务在实际使用中应该初始化一次。
+                  //启动服务,启动服务在实际使用中应该只初始化一次。
                   clientContext.start();
                   UserDao a = clientContext.get(UserDao.class);
                   String ret = a.findById("hh=="+(j++));

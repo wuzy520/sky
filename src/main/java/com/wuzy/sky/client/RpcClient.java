@@ -94,8 +94,6 @@ public class RpcClient {
                 System.out.println("cancel.....");
                 future.cancel(true);
             }
-
-            // close();
         }
     }
 

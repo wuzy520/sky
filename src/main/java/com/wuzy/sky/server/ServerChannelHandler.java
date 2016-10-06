@@ -21,7 +21,7 @@ import java.util.concurrent.Executors;
  */
 @ChannelHandler.Sharable
 public class ServerChannelHandler extends SimpleChannelInboundHandler<Request> {
-    ExecutorService service = Executors.newFixedThreadPool(10);
+    public static final ExecutorService service = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors()*2+1);
     private static final Map<String, Channel> channelMap = new ConcurrentHashMap<String, Channel>();
 
     @Override
@@ -34,7 +34,7 @@ public class ServerChannelHandler extends SimpleChannelInboundHandler<Request> {
                 try {
                     Object result = handle(request);
                     response.setResult(result);
-                }catch (Throwable t){
+                } catch (Throwable t) {
                     t.printStackTrace();
                 }
 
@@ -49,7 +49,7 @@ public class ServerChannelHandler extends SimpleChannelInboundHandler<Request> {
     }
 
     private Object handle(Request request) throws Throwable {
-        long start=System.currentTimeMillis();
+        long start = System.currentTimeMillis();
 
         IServiceInitializer iServiceInitializer = ServerContext.getServiceInitializer();
 
@@ -58,8 +58,8 @@ public class ServerChannelHandler extends SimpleChannelInboundHandler<Request> {
         Class<?>[] parameterTypes = request.getParameterTypes();
         Object[] parameters = request.getParameters();
 
-        Class clazz =  Class.forName(className);
-        Object clazzObj =  iServiceInitializer.getImpl(clazz);
+        Class clazz = Class.forName(className);
+        Object clazzObj = iServiceInitializer.getImpl(clazz);
 
         //Cglib reflect
        /* FastClass serviceFastClass = FastClass.create(clazz);
@@ -67,9 +67,9 @@ public class ServerChannelHandler extends SimpleChannelInboundHandler<Request> {
         Object obj =  serviceFastMethod.invoke(clazzObj, parameters);
         System.out.println("obj====="+obj);
         */
-        Method method =  clazz.getMethod(methodName,parameterTypes);
-        Object obj =  method.invoke(clazzObj,parameters);
-        System.out.println("method invoke==="+(System.currentTimeMillis()-start)+" 毫秒");
+        Method method = clazz.getMethod(methodName, parameterTypes);
+        Object obj = method.invoke(clazzObj, parameters);
+        System.out.println("method invoke===" + (System.currentTimeMillis() - start) + " 毫秒");
         return obj;
     }
 

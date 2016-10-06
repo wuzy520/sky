@@ -46,5 +46,5 @@
                   //启动服务,启动服务在实际使用中应该只初始化一次。
                   clientContext.start();
                   UserDao a = clientContext.get(UserDao.class);
-                  String ret = a.findById("hh=="+(j++));
+                  String ret = a.findById("123");
                   System.out.println("ret====" + ret);

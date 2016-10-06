@@ -26,7 +26,7 @@ import java.util.concurrent.locks.ReentrantLock;
  */
 public class ClientContext {
 
-    private Map<ConfigOption, Object> options = new HashMap<>();
+    private final Map<ConfigOption, Object> options = new HashMap<>();
     private Lock lock = new ReentrantLock();
     private String connectStr;//zookeeper 注册服务中心
 
@@ -181,7 +181,7 @@ public class ClientContext {
         }
     }
 
-    private RpcChannel startRpcClient(String host, int port) throws Throwable {
+    public RpcChannel startRpcClient(String host, int port) throws Throwable {
         RpcClient rpcClient = new RpcClient(host, port);
         Object connectTimeout = options.get(ConfigOption.CONNECT_TIMEOUT_MILLIS);
         if (connectTimeout != null) {

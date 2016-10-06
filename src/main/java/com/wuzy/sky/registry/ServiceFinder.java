@@ -25,6 +25,7 @@ public class ServiceFinder {
     private Map<String, ServiceProvider<InstanceDetails>> providers = new HashMap<>();
     private List<Closeable> closeableList = new ArrayList<>();
     private Object lock = new Object();
+    private ClientContext clientContext;
 
     public ServiceFinder(CuratorFramework client, String basePath) throws Exception {
         JsonInstanceSerializer<InstanceDetails> serializer = new JsonInstanceSerializer<InstanceDetails>(InstanceDetails.class);
@@ -35,6 +36,10 @@ public class ServiceFinder {
                 .build();
 
         serviceDiscovery.start();
+    }
+
+    public void setClientContext(ClientContext clientContext) {
+        this.clientContext = clientContext;
     }
 
 
@@ -74,11 +79,14 @@ public class ServiceFinder {
                     closeAndRemoveAllChannels();
                 }
                 Map<String, RpcChannel> channelMap = ClientContext.channelMap;
+                //只匹配配置的接口
+                List<ServiceInstance> newInstances = compareAndGetInstances(instances);
+
                 //删除丢失的链接
-                removeDisconnected(instances, channelMap);
+                removeDisconnected(newInstances, channelMap);
 
                 //添加
-                for (ServiceInstance instance : instances) {
+                for (ServiceInstance instance : newInstances) {
                     if (instance == null) continue;
                     InstanceDetails instanceDetails = (InstanceDetails) instance.getPayload();
                     String interfaceName = instanceDetails.getInterfaceName();
@@ -86,7 +94,7 @@ public class ServiceFinder {
                     if (channel == null) {
                         //不存在,重新创建连接并加入
                         try {
-                            RpcChannel rc = ClientContext.builder().startRpcClient(instanceDetails.getListenAddress(), instanceDetails.getListenPort());
+                            RpcChannel rc = clientContext.startRpcClient(instanceDetails.getListenAddress(), instanceDetails.getListenPort());
                             channelMap.put(interfaceName, rc);
                         } catch (Throwable throwable) {
                             throwable.printStackTrace();
@@ -100,6 +108,17 @@ public class ServiceFinder {
 
         cache.start();
 
+    }
+
+    private List<ServiceInstance> compareAndGetInstances(List<ServiceInstance> instances) {
+        Set<String> names = clientContext.channelMap.keySet();
+        List<ServiceInstance> newInstances = new ArrayList<>();
+        for (ServiceInstance instance : instances) {
+            if (names.contains(instance.getName())){
+                newInstances.add(instance);
+            }
+        }
+        return newInstances;
     }
 
     //删除丢失的链接

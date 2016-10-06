@@ -219,6 +219,7 @@ public class ClientContext {
                 .build();
         client.start();
         finder = new ServiceFinder(client, ServerContext.basePath);
+        finder.setClientContext(this);
 
         //记录在zookeeper服务中没有找到的接口服务
         Set<String> errServices = new HashSet<>();
@@ -246,5 +247,7 @@ public class ClientContext {
         return options;
     }
 
-
+    public Set<Class> getServiceClasses() {
+        return serviceClasses;
+    }
 }

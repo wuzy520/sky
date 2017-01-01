@@ -3,9 +3,7 @@ package com.wuzy.sky.proxy;
 import com.wuzy.sky.ConfigOption;
 import com.wuzy.sky.RpcChannel;
 import com.wuzy.sky.client.ClientContext;
-import com.wuzy.sky.client.RpcClient;
 import com.wuzy.sky.pojo.Request;
-
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.util.Map;
@@ -34,7 +32,6 @@ public class ObjectProxy<T> implements InvocationHandler {
 
     @Override
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-        long start = System.currentTimeMillis();
         if (Object.class == method.getDeclaringClass()) {
             String name = method.getName();
             if ("equals".equals(name)) {
@@ -69,8 +66,7 @@ public class ObjectProxy<T> implements InvocationHandler {
             timeout = waitTimeout;
         }
 
-        Object result = channel.send(request,timeout);
+        return channel.send(request,timeout);
 
-        return result;
     }
 }

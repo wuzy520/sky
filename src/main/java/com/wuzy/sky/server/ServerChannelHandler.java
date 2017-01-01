@@ -8,8 +8,6 @@ import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.util.concurrent.Future;
-import io.netty.util.concurrent.GenericFutureListener;
-
 import java.lang.reflect.Method;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -26,9 +24,7 @@ public class ServerChannelHandler extends SimpleChannelInboundHandler<Request> {
 
     @Override
     protected void messageReceived(final ChannelHandlerContext ctx, final Request request) throws Exception {
-        service.submit(new Runnable() {
-            @Override
-            public void run() {
+        service.submit(()-> {
                 Response response = new Response();
                 response.setRequestId(request.getRequestId());
                 try {
@@ -38,14 +34,11 @@ public class ServerChannelHandler extends SimpleChannelInboundHandler<Request> {
                     t.printStackTrace();
                 }
 
-                ctx.writeAndFlush(response).addListener(new GenericFutureListener<Future<? super Void>>() {
-                    @Override
-                    public void operationComplete(Future<? super Void> future) throws Exception {
+                ctx.writeAndFlush(response).addListener((Future<? super Void> future) -> {
                         System.out.println("sucess........");
-                    }
-                });
+                    });
             }
-        });
+        );
     }
 
     private Object handle(Request request) throws Throwable {
